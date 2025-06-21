@@ -100,7 +100,7 @@ function plugin.on_frame(data, settings)
         end
 
         if foundfile then
-            -- clamp fp and set value
+            -- clamp coins and set value (coinvalue could be negative)
             currentcoins = memory.read_s16_be(playerDataStructAddr + playerDataCoinOffset)
             coinvalue = math.clamp(currentcoins + coinvalue, 0, 999)
             memory.write_s16_be(playerDataStructAddr + playerDataCoinOffset, coinvalue)
