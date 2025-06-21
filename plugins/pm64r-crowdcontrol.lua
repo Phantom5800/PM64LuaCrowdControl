@@ -4,9 +4,11 @@ plugin.name = "PM64R Crowd Control"
 plugin.author = "Phantom5800"
 plugin.settings = 
 {
+    { name='invertcontrols', type='file', label='Invert Controls Enabled' },
     { name='slowgoenabled', type='file', label='Slow Go Enabled' },
     { name='sethp', type='file', label='Set HP Value'},
-    { name='setfp', type='file', label='Set FP Value'}
+    { name='setfp', type='file', label='Set FP Value'},
+    { name='addcoins', type='file', label='Add Coins'}
 }
 
 plugin.description =
@@ -20,6 +22,10 @@ playerDataMaxHPOffset   = 0x3
 playerDataCurrFPOffset  = 0x5
 playerDataMaxFPOffset   = 0x6
 playerDataCoinOffset    = 0xC
+playerDataSPOffset      = 0x10
+playerDataParnerOffset  = 0x12
+
+equippedBadgesTableAddr = 0x8010F498
 
 function math.clamp(n, low, high) return math.min(math.max(n, low), high) end
 
@@ -79,6 +85,26 @@ function plugin.on_frame(data, settings)
             fpvalue = math.clamp(fpvalue, 0, maxfp)
             memory.write_s8(playerDataStructAddr + playerDataCurrFPOffset, fpvalue)
             os.remove(settings.setfp)
+        end
+    end
+
+    -- check if there is an AddCoins file
+    if settings.addcoins then
+        foundfile = false
+        coinvalue = 0
+        local fn, err = io.open(settings.addcoins, 'r')
+        if fn ~= nil then
+            foundfile = true
+            coinvalue = fn:read("*number")
+            fn:close()
+        end
+
+        if foundfile then
+            -- clamp fp and set value
+            currentcoins = memory.read_s16_be(playerDataStructAddr + playerDataCoinOffset)
+            coinvalue = math.clamp(currentcoins + coinvalue, 0, 999)
+            memory.write_s16_be(playerDataStructAddr + playerDataCoinOffset, coinvalue)
+            os.remove(settings.addcoins)
         end
     end
 end
