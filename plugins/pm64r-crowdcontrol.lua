@@ -14,9 +14,19 @@ plugin.description =
     Trigger ingame events for Paper Mario when specific files are created.
 ]]
 
+playerDataStructAddr    = 0x8010F290
+playerDataCurrHPOffset  = 0x2
+playerDataMaxHPOffset   = 0x3
+playerDataCurrFPOffset  = 0x5
+playerDataMaxFPOffset   = 0x6
+playerDataCoinOffset    = 0xC
+
+function math.clamp(n, low, high) return math.min(math.max(n, low), high) end
+
 -- called each frame
 function plugin.on_frame(data, settings)
     -- check if Slow Go should be enabled
+    -- lifetime of this file should be controlled externally
     if settings.slowgoenabled then
         foundfile = false
         local fn, err = io.open(settings.slowgoenabled, 'r')
@@ -44,9 +54,10 @@ function plugin.on_frame(data, settings)
         end
 
         if foundfile then
-            if hpvalue > 0 then
-                -- set hp in player struct
-            end
+            -- clamp hp and set value
+            maxhp = memory.read_s8(playerDataStructAddr + playerDataMaxHPOffset)
+            hpvalue = math.clamp(hpvalue, 1, maxhp)
+            memory.write_s8(playerDataStructAddr + playerDataCurrHPOffset, hpvalue)
             os.remove(settings.sethp)
         end
     end
@@ -63,7 +74,10 @@ function plugin.on_frame(data, settings)
         end
 
         if foundfile then
-            -- set fp in player struct
+            -- clamp fp and set value
+            maxfp = memory.read_s8(playerDataStructAddr + playerDataMaxFPOffset)
+            fpvalue = math.clamp(fpvalue, 0, maxfp)
+            memory.write_s8(playerDataStructAddr + playerDataCurrFPOffset, fpvalue)
             os.remove(settings.setfp)
         end
     end
