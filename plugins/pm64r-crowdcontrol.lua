@@ -34,7 +34,7 @@ function plugin.set_badge(badge_id, enabled)
     local isBadgeEnabled = false
     local equippedBadgeAddress = 0
     local shiftBadges = false
-    for i=0,64 do
+    for i=0,63 do -- 64 slots, Lua numeric for loops are inclusive
         local currentAddress = equippedBadgesTableAddr + i * 2 -- equipped badges are 2 byte ids
         local current_badge = memory.read_s16_be(currentAddress)
 
@@ -63,7 +63,7 @@ function plugin.set_badge(badge_id, enabled)
 
     -- add badge to equipped list if it is not currently enabled
     if not isBadgeEnabled and enabled then
-        for i=0,64 do
+        for i=0,63 do
             local currentAddress = equippedBadgesTableAddr + i * 2 -- equipped badges are 2 byte ids
             local current_badge = memory.read_s16_be(currentAddress)
             if current_badge == 0 then
