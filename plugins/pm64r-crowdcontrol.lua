@@ -31,16 +31,16 @@ function math.clamp(n, low, high) return math.min(math.max(n, low), high) end
 
 -- helper function to force specific badges on/off
 function plugin.set_badge(badge_id, enabled)
-    isBadgeEnabled = false
-    equippedBadgeAddress = 0
-    shiftBadges = false
+    local isBadgeEnabled = false
+    local equippedBadgeAddress = 0
+    local shiftBadges = false
     for i=0,64 do
-        currentAddress = equippedBadgesTableAddr + i * 2 -- equipped badges are 2 byte ids
-        current_badge = memory.read_s16_be(currentAddress)
+        local currentAddress = equippedBadgesTableAddr + i * 2 -- equipped badges are 2 byte ids
+        local current_badge = memory.read_s16_be(currentAddress)
 
         -- move current badge into previous slot
         if shiftBadges then
-            previousAddress = currentAddress - 2
+            local previousAddress = currentAddress - 2
             memory.write_s16_be(previousAddress, current_badge)
             memory.write_s16_be(currentAddress, 0)
         end
@@ -64,8 +64,8 @@ function plugin.set_badge(badge_id, enabled)
     -- add badge to equipped list if it is not currently enabled
     if not isBadgeEnabled and enabled then
         for i=0,64 do
-            currentAddress = equippedBadgesTableAddr + i * 2 -- equipped badges are 2 byte ids
-            current_badge = memory.read_s16_be(currentAddress)
+            local currentAddress = equippedBadgesTableAddr + i * 2 -- equipped badges are 2 byte ids
+            local current_badge = memory.read_s16_be(currentAddress)
             if current_badge == 0 then
                 memory.write_s16_be(currentAddress, badge_id) -- write badge into the first empty slot found
                 break
@@ -76,14 +76,14 @@ end
 
 -- called each frame
 function plugin.on_frame(data, settings)
-    gamemode = memory.read_s8(0x800A08F1)
+    local gamemode = memory.read_s8(0x800A08F1)
     -- game mode 4 is "world"
     -- game mode 8 is "battle"
     if gamemode == 4 or gamemode == 8 then
         -- check if Slow Go should be enabled
         -- lifetime of this file should be controlled externally
         if settings.slowgoenabled then
-            foundfile = false
+            local foundfile = false
             local fn, err = io.open(settings.slowgoenabled, 'r')
             if fn ~= nil then
                 foundfile = true
@@ -101,8 +101,8 @@ function plugin.on_frame(data, settings)
 
         -- check if there is a SetHP file
         if settings.sethp then
-            foundfile = false
-            hpvalue = 0
+            local foundfile = false
+            local hpvalue = 0
             local fn, err = io.open(settings.sethp, 'r')
             if fn ~= nil then
                 foundfile = true
@@ -121,8 +121,8 @@ function plugin.on_frame(data, settings)
 
         -- check if there is a SetFP file
         if settings.setfp then
-            foundfile = false
-            fpvalue = 0
+            local foundfile = false
+            local fpvalue = 0
             local fn, err = io.open(settings.setfp, 'r')
             if fn ~= nil then
                 foundfile = true
@@ -141,8 +141,8 @@ function plugin.on_frame(data, settings)
 
         -- check if there is an AddCoins file
         if settings.addcoins then
-            foundfile = false
-            coinvalue = 0
+            local foundfile = false
+            local coinvalue = 0
             local fn, err = io.open(settings.addcoins, 'r')
             if fn ~= nil then
                 foundfile = true
