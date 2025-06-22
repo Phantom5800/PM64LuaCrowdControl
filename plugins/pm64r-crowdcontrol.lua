@@ -4,17 +4,17 @@ plugin.name = "PM64R Crowd Control"
 plugin.author = "Phantom5800"
 plugin.settings = 
 {
-    { name='slowgoenabled', type='file', label='Slow Go Enabled' },
-    { name='disableallbadges', type='file', label='Disable All Badges' },
-    { name='sethp', type='file', label='Set HP Value' },
-    { name='setfp', type='file', label='Set FP Value' },
-    { name='addcoins', type='file', label='Add Coins' },
-    { name='randompitch', type='file', label='Random Pitch' },
-    { name='togglemirrormode', type='file', label='Toggle Mirror Mode' },
-    { name='disablesaveblocks', type='file', label='Disable Save Blocks' },
-    { name='disableheartblocks', type='file', label='Disable Heart Blocks' },
-    { name='ohkomode', type='file', label='OHKO Mode' },
-    { name='disablespeedyspin', type='file', label='Disable Speedy Spin' }
+    { name='addcoins',              type='file', label='Add Coins' },
+    { name='disableallbadges',      type='file', label='Disable All Badges' },
+    { name='disableheartblocks',    type='file', label='Disable Heart Blocks' },
+    { name='disablesaveblocks',     type='file', label='Disable Save Blocks' },
+    { name='disablespeedyspin',     type='file', label='Disable Speedy Spin' },
+    { name='enableslowgo',          type='file', label='Slow Go Enabled' },
+    { name='ohkomode',              type='file', label='OHKO Mode' },
+    { name='randompitch',           type='file', label='Random Pitch' },
+    { name='sethp',                 type='file', label='Set HP Value' },
+    { name='setfp',                 type='file', label='Set FP Value' },
+    { name='togglemirrormode',      type='file', label='Toggle Mirror Mode' }
 }
 
 plugin.description =
@@ -167,9 +167,9 @@ function plugin.on_frame(data, settings)
 
         -- check if Slow Go should be enabled
         -- lifetime of this file should be controlled externally
-        if settings.slowgoenabled then
+        if settings.enableslowgo then
             local foundfile = false
-            local fn, err = io.open(settings.slowgoenabled, 'r')
+            local fn, err = io.open(settings.enableslowgo, 'r')
             if fn ~= nil then
                 foundfile = true
                 fn:close()
