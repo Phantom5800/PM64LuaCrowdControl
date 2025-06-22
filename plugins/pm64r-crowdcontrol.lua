@@ -7,9 +7,10 @@ plugin.settings =
     { name='invertcontrols', type='file', label='Invert Controls Enabled' },
     { name='slowgoenabled', type='file', label='Slow Go Enabled' },
     { name='disableallbadges', type='file', label='Disable All Badges' },
-    { name='sethp', type='file', label='Set HP Value'},
-    { name='setfp', type='file', label='Set FP Value'},
-    { name='addcoins', type='file', label='Add Coins'}
+    { name='sethp', type='file', label='Set HP Value' },
+    { name='setfp', type='file', label='Set FP Value' },
+    { name='addcoins', type='file', label='Add Coins' },
+    { name='randompitch', type='file', label='Random Pitch' }
 }
 
 plugin.description =
@@ -27,6 +28,11 @@ playerDataSPOffset      = 0x10
 playerDataParnerOffset  = 0x12
 
 equippedBadgesTableAddr = 0x8010F498
+
+sqldbStartAddr = 0x804C0000
+randomPitchKey = 0xAF070000
+
+randomPitchAddr = nil
 
 function math.clamp(n, low, high) return math.min(math.max(n, low), high) end
 
@@ -76,9 +82,40 @@ function plugin.set_badge(badge_id, enabled)
     end
 end
 
+function plugin.setup_addresses()
+    local isSqlTable = true
+    local offset = 0
+    while isSqlTable do
+        local currentAddress = sqldbStartAddr + offset * 4 * 2 -- size of key + skip over value
+        local key = memory.read_u32_be(currentAddress)
+        offset = offset + 1
+
+        if (key & 0xA0000000) ~= 0xA0000000 then
+            isSqlTable = false
+        else
+            if key == randomPitchKey then
+                randomPitchAddr = currentAddress + 4
+                console.log("Random Pitch address: "..randomPitchAddr)
+            end
+        end
+    end
+end
+
+function plugin.on_game_load(data, settings)
+    plugin.setup_addresses()
+end
+
 -- called each frame
 function plugin.on_frame(data, settings)
     local gamemode = memory.read_s8(0x800A08F1)
+
+    -- game mode 1 is "logos"
+    -- code that only needs to run once on startup, like searching for arbitrary memory addresses
+    -- can go here
+    if gamemode == 1 then
+        plugin.setup_addresses()
+    end
+
     -- game mode 4 is "world"
     -- game mode 8 is "battle"
     if gamemode == 4 or gamemode == 8 then
@@ -117,6 +154,25 @@ function plugin.on_frame(data, settings)
             else
                 -- force disable slow go badge effect
                 plugin.set_badge(0xf7, false)
+            end
+        end
+
+        -- check if Random Pitch should be enabled
+        -- lifetime of this file should be controlled externally
+        if settings.randompitch and randomPitchAddr then
+            local foundfile = false
+            local fn, err = io.open(settings.randompitch, 'r')
+            if fn ~= nil then
+                foundfile = true
+                fn:close()
+            end
+
+            if foundfile then
+                -- force enable random pitch
+                memory.write_u32_be(randomPitchAddr, 1)
+            else
+                -- force disable random pitch
+                memory.write_u32_be(randomPitchAddr, 0)
             end
         end
 
