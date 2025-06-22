@@ -4,14 +4,17 @@ plugin.name = "PM64R Crowd Control"
 plugin.author = "Phantom5800"
 plugin.settings = 
 {
-    { name='invertcontrols', type='file', label='Invert Controls Enabled' },
     { name='slowgoenabled', type='file', label='Slow Go Enabled' },
     { name='disableallbadges', type='file', label='Disable All Badges' },
     { name='sethp', type='file', label='Set HP Value' },
     { name='setfp', type='file', label='Set FP Value' },
     { name='addcoins', type='file', label='Add Coins' },
     { name='randompitch', type='file', label='Random Pitch' },
-    { name='togglemirrormode', type='file', label='Toggle Mirror Mode' }
+    { name='togglemirrormode', type='file', label='Toggle Mirror Mode' },
+    { name='disablesaveblocks', type='file', label='Disable Save Blocks' },
+    { name='disableheartblocks', type='file', label='Disable Heart Blocks' },
+    { name='ohkomode', type='file', label='OHKO Mode' },
+    { name='disablespeedyspin', type='file', label='Disable Speedy Spin' }
 }
 
 plugin.description =
@@ -31,11 +34,23 @@ playerDataParnerOffset  = 0x12
 equippedBadgesTableAddr = 0x8010F498
 
 sqldbStartAddr  = 0x804C0000
-randomPitchKey  = 0xAF070000
+doubleDamageKey = 0xAF020002
+quadDamageKey   = 0xAF020003
+ohkoModeKey     = 0xAF020004
+noSaveBlockKey  = 0xAF020005
+noHeartBlockKey = 0xAF020006
+speedyKey       = 0xAF040004
+ispyKey         = 0xAF040005
+peekabooKey     = 0xAF040006
 mirrorModeKey   = 0xAF02000D
+randomPitchKey  = 0xAF070000
 
-randomPitchAddr = nil
-mirrorModeAddr  = nil
+ohkomodeAddr        = nil
+noSaveBlockAddr     = nil
+noHeartBlockAddr    = nil
+speedyAddr          = nil
+mirrorModeAddr      = nil
+randomPitchAddr     = nil
 
 function math.clamp(n, low, high) return math.min(math.max(n, low), high) end
 
@@ -98,10 +113,16 @@ function plugin.setup_addresses()
         else
             if key == randomPitchKey then
                 randomPitchAddr = currentAddress + 4
-                console.log("Random Pitch address: "..randomPitchAddr)
             elseif key == mirrorModeKey then
                 mirrorModeAddr = currentAddress + 4
-                console.log("Mirror Mode address: "..mirrorModeAddr)
+            elseif key == speedyKey then
+                speedyAddr = currentAddress + 4
+            elseif key == noSaveBlockKey then
+                noSaveBlockAddr = currentAddress + 4
+            elseif key == noHeartBlockKey then
+                noHeartBlockAddr = currentAddress + 4
+            elseif key == ohkoModeKey then
+                ohkomodeAddr = currentAddress + 4
             end
         end
     end
@@ -254,6 +275,66 @@ function plugin.on_frame(data, settings)
                 coinvalue = math.clamp(currentcoins + coinvalue, 0, 999)
                 memory.write_s16_be(playerDataStructAddr + playerDataCoinOffset, coinvalue)
                 os.remove(settings.addcoins)
+            end
+        end
+
+        if settings.disablesaveblocks and noSaveBlockAddr then
+            local foundfile = false
+            local fn, err = io.open(settings.disablesaveblocks, 'r')
+            if fn ~= nil then
+                foundfile = true
+                fn:close()
+            end
+
+            if foundfile then
+                memory.write_u32_be(noSaveBlockAddr, 1)
+            else
+                memory.write_u32_be(noSaveBlockAddr, 0)
+            end
+        end
+
+        if settings.disableheartblocks and noHeartBlockAddr then
+            local foundfile = false
+            local fn, err = io.open(settings.disableheartblocks, 'r')
+            if fn ~= nil then
+                foundfile = true
+                fn:close()
+            end
+
+            if foundfile then
+                memory.write_u32_be(noHeartBlockAddr, 1)
+            else
+                memory.write_u32_be(noHeartBlockAddr, 0)
+            end
+        end
+
+        if settings.ohkomode and ohkomodeAddr then
+            local foundfile = false
+            local fn, err = io.open(settings.ohkomode, 'r')
+            if fn ~= nil then
+                foundfile = true
+                fn:close()
+            end
+
+            if foundfile then
+                memory.write_u32_be(ohkomodeAddr, 1)
+            else
+                memory.write_u32_be(ohkomodeAddr, 0)
+            end
+        end
+
+        if settings.disablespeedyspin and speedyAddr then
+            local foundfile = false
+            local fn, err = io.open(settings.disablespeedyspin, 'r')
+            if fn ~= nil then
+                foundfile = true
+                fn:close()
+            end
+
+            if foundfile then
+                memory.write_u32_be(speedyAddr, 0)
+            else
+                memory.write_u32_be(speedyAddr, 1)
             end
         end
     end
