@@ -10,7 +10,8 @@ plugin.settings =
     { name='sethp', type='file', label='Set HP Value' },
     { name='setfp', type='file', label='Set FP Value' },
     { name='addcoins', type='file', label='Add Coins' },
-    { name='randompitch', type='file', label='Random Pitch' }
+    { name='randompitch', type='file', label='Random Pitch' },
+    { name='togglemirrormode', type='file', label='Toggle Mirror Mode' }
 }
 
 plugin.description =
@@ -29,10 +30,12 @@ playerDataParnerOffset  = 0x12
 
 equippedBadgesTableAddr = 0x8010F498
 
-sqldbStartAddr = 0x804C0000
-randomPitchKey = 0xAF070000
+sqldbStartAddr  = 0x804C0000
+randomPitchKey  = 0xAF070000
+mirrorModeKey   = 0xAF02000D
 
 randomPitchAddr = nil
+mirrorModeAddr  = nil
 
 function math.clamp(n, low, high) return math.min(math.max(n, low), high) end
 
@@ -96,6 +99,9 @@ function plugin.setup_addresses()
             if key == randomPitchKey then
                 randomPitchAddr = currentAddress + 4
                 console.log("Random Pitch address: "..randomPitchAddr)
+            elseif key == mirrorModeKey then
+                mirrorModeAddr = currentAddress + 4
+                console.log("Mirror Mode address: "..mirrorModeAddr)
             end
         end
     end
@@ -173,6 +179,21 @@ function plugin.on_frame(data, settings)
             else
                 -- force disable random pitch
                 memory.write_u32_be(randomPitchAddr, 0)
+            end
+        end
+
+        -- toggle mirror mode, this change does not take effect
+        -- until entering a loading zone
+        if settings.togglemirrormode and mirrorModeAddr then
+            local fn, err = io.open(settings.togglemirrormode, 'r')
+            if fn ~= nil then
+                foundfile = true
+                fn:close()
+
+                local mirrorState = memory.read_u32_be(mirrorModeAddr)
+                -- toggle flag, ensure it's not set to random every load
+                memory.write_u32_be((mirrorState ^ 1) & 0x00000001) 
+                os.remove(settings.togglemirrormode)
             end
         end
 
