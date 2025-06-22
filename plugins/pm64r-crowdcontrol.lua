@@ -6,6 +6,7 @@ plugin.settings =
 {
     { name='invertcontrols', type='file', label='Invert Controls Enabled' },
     { name='slowgoenabled', type='file', label='Slow Go Enabled' },
+    { name='disableallbadges', type='file', label='Disable All Badges' },
     { name='sethp', type='file', label='Set HP Value'},
     { name='setfp', type='file', label='Set FP Value'},
     { name='addcoins', type='file', label='Add Coins'}
@@ -55,6 +56,7 @@ function plugin.set_badge(badge_id, enabled)
             isBadgeEnabled = true
             equippedBadgeAddress = currentAddress
             -- if badge has been removed, remaining badges need to shift over
+            -- if badge is supposed to stay on, break out early
             if not shiftBadges then
                 break
             end
@@ -80,6 +82,25 @@ function plugin.on_frame(data, settings)
     -- game mode 4 is "world"
     -- game mode 8 is "battle"
     if gamemode == 4 or gamemode == 8 then
+        -- disable all badges, do before force enabling slow go
+        if settings.disableallbadges then
+            local foundfile = false
+            local fn, err = io.open(settings.disableallbadges, 'r')
+            if fn ~= nil then
+                foundfile = true
+                fn:close()
+            end
+
+            if foundfile then
+                -- 0 out active badge array 4 bytes at a time
+                for i=0,31 do
+                    local currentAddress = equippedBadgesTableAddr + i * 4
+                    memory.write_s32_be(currentAddress, 0)
+                end
+                os.remove(settings.disableallbadges)
+            end
+        end
+
         -- check if Slow Go should be enabled
         -- lifetime of this file should be controlled externally
         if settings.slowgoenabled then
