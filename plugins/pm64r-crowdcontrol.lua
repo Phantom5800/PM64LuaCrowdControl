@@ -14,6 +14,7 @@ plugin.settings =
     { name='homewardshroom',        type='file', label='Homeward Shroom' },
     { name='ohkomode',              type='file', label='OHKO Mode' },
     { name='randompitch',           type='file', label='Random Pitch' },
+    { name='sethomewardshroom',     type='file', label='Set Homeward Shroom Location' }
     { name='sethp',                 type='file', label='Set HP Value' },
     { name='setfp',                 type='file', label='Set FP Value' },
     { name='togglemirrormode',      type='file', label='Toggle Mirror Mode' }
@@ -34,10 +35,12 @@ playerDataSPOffset      = 0x10
 playerDataParnerOffset  = 0x12
 
 equippedBadgesTableAddr = 0x8010F498
+currentMapAddr          = 0x800D9050 -- JP address (0x800d9210) - 0x1c0, need to double check this
 homewardShroomAddr      = 0x80450953
 cutsceneValueAddr       = 0x8010EFCA
 
 sqldbStartAddr  = 0x804C0000
+startingMapKey  = 0xAF000000
 doubleDamageKey = 0xAF020002
 quadDamageKey   = 0xAF020003
 ohkoModeKey     = 0xAF020004
@@ -49,6 +52,7 @@ peekabooKey     = 0xAF040006
 mirrorModeKey   = 0xAF02000D
 randomPitchKey  = 0xAF070000
 
+startingMapAddr     = nil
 ohkomodeAddr        = nil
 noSaveBlockAddr     = nil
 noHeartBlockAddr    = nil
@@ -127,6 +131,8 @@ function plugin.setup_addresses()
                 noHeartBlockAddr = currentAddress + 4
             elseif key == ohkoModeKey then
                 ohkomodeAddr = currentAddress + 4
+            elseif key == startingMapKey then
+                startingMapAddr = currentAddress + 4
             end
         end
     end
@@ -223,6 +229,16 @@ function plugin.on_frame(data, settings)
                 local mirrorState = memory.read_u32_be(mirrorModeAddr)
                 -- toggle flag, ensure it's not set to random every load
                 memory.write_u32_be(mirrorModeAddr, (mirrorState ^ 1) & 0x00000001) 
+            end
+        end
+
+        -- change homeward shroom's "home" location to the current room
+        if settings.sethomewardshroom then
+            local fn, err = io.open(settings.sethomewardshroom, 'r')
+            if fn ~= nil then
+                fn:close()
+                os.remove(settings.sethomewardshroom)
+                memory.write_u32_be(startingMapAddr, memory.read_u32_be(currentMapAddr))
             end
         end
 
