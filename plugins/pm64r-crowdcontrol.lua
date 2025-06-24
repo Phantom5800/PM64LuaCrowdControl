@@ -137,17 +137,17 @@ end
 -- called each frame
 function plugin.on_frame(data, settings)
     local gamemode = memory.read_s8(0x800A08F1)
+    local SPLASH_SCREEN = 1
+    local GAMESTATE_WORLD = 4
+    local GAMESTATE_BATTLE = 8
 
-    -- game mode 1 is "logos"
     -- code that only needs to run once on startup, like searching for arbitrary memory addresses
     -- can go here
-    if gamemode == 1 then
+    if gamemode == SPLASH_SCREEN then
         plugin.setup_addresses()
     end
 
-    -- game mode 4 is "world"
-    -- game mode 8 is "battle"
-    if gamemode == 4 or gamemode == 8 then
+    if gamemode == GAMESTATE_WORLD or gamemode == GAMESTATE_BATTLE then
         -- disable all badges, do before force enabling slow go
         if settings.disableallbadges then
             local foundfile = false
@@ -220,7 +220,7 @@ function plugin.on_frame(data, settings)
         end
 
         -- force use homeward shroom
-        if settings.homewardshroom then
+        if settings.homewardshroom and gamemode = GAMESTATE_WORLD then
             local fn, err = io.open(settings.homewardshroom, 'r')
             if fn ~= nil then
                 fn:close()
