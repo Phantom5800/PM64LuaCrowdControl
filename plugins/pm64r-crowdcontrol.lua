@@ -10,6 +10,7 @@ plugin.settings =
     { name='disablesaveblocks',     type='file', label='Disable Save Blocks' },
     { name='disablespeedyspin',     type='file', label='Disable Speedy Spin' },
     { name='enableslowgo',          type='file', label='Slow Go Enabled' },
+    { name='homewardshroom',        type='file', label='Homeward Shroom' },
     { name='ohkomode',              type='file', label='OHKO Mode' },
     { name='randompitch',           type='file', label='Random Pitch' },
     { name='sethp',                 type='file', label='Set HP Value' },
@@ -32,6 +33,7 @@ playerDataSPOffset      = 0x10
 playerDataParnerOffset  = 0x12
 
 equippedBadgesTableAddr = 0x8010F498
+homewardShroomAddr      = 0x80450953
 
 sqldbStartAddr  = 0x804C0000
 doubleDamageKey = 0xAF020002
@@ -213,8 +215,20 @@ function plugin.on_frame(data, settings)
 
                 local mirrorState = memory.read_u32_be(mirrorModeAddr)
                 -- toggle flag, ensure it's not set to random every load
-                memory.write_u32_be((mirrorState ^ 1) & 0x00000001) 
+                memory.write_u32_be(mirrorModeAddr, (mirrorState ^ 1) & 0x00000001) 
                 os.remove(settings.togglemirrormode)
+            end
+        end
+
+        -- force use homeward shroom
+        if settings.homewardshroom then
+            local fn, err = io.open(settings.homewardshroom, 'r')
+            if fn ~= nil then
+                foundfile = true
+                fn:close()
+
+                memory.write_s8(homewardShroomAddr, 1) 
+                os.remove(settings.homewardshroom)
             end
         end
 
