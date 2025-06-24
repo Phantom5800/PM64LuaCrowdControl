@@ -210,13 +210,12 @@ function plugin.on_frame(data, settings)
         if settings.togglemirrormode and mirrorModeAddr then
             local fn, err = io.open(settings.togglemirrormode, 'r')
             if fn ~= nil then
-                foundfile = true
                 fn:close()
+                os.remove(settings.togglemirrormode)
 
                 local mirrorState = memory.read_u32_be(mirrorModeAddr)
                 -- toggle flag, ensure it's not set to random every load
                 memory.write_u32_be(mirrorModeAddr, (mirrorState ^ 1) & 0x00000001) 
-                os.remove(settings.togglemirrormode)
             end
         end
 
@@ -224,11 +223,10 @@ function plugin.on_frame(data, settings)
         if settings.homewardshroom then
             local fn, err = io.open(settings.homewardshroom, 'r')
             if fn ~= nil then
-                foundfile = true
                 fn:close()
-
-                memory.write_s8(homewardShroomAddr, 1) 
                 os.remove(settings.homewardshroom)
+                -- set a byte that forces the randomizer to trigger a homeward shroom
+                memory.write_s8(homewardShroomAddr, 1) 
             end
         end
 
