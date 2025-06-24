@@ -9,6 +9,7 @@ plugin.settings =
     { name='disableheartblocks',    type='file', label='Disable Heart Blocks' },
     { name='disablesaveblocks',     type='file', label='Disable Save Blocks' },
     { name='disablespeedyspin',     type='file', label='Disable Speedy Spin' },
+    { name='enableberserker',       type='file', label='Berserker Enabled' },
     { name='enableslowgo',          type='file', label='Slow Go Enabled' },
     { name='homewardshroom',        type='file', label='Homeward Shroom' },
     { name='ohkomode',              type='file', label='OHKO Mode' },
@@ -34,6 +35,7 @@ playerDataParnerOffset  = 0x12
 
 equippedBadgesTableAddr = 0x8010F498
 homewardShroomAddr      = 0x80450953
+cutsceneValueAddr       = 0x8010EFCA
 
 sqldbStartAddr  = 0x804C0000
 doubleDamageKey = 0xAF020002
@@ -167,24 +169,29 @@ function plugin.on_frame(data, settings)
             end
         end
 
-        -- check if Slow Go should be enabled
-        -- lifetime of this file should be controlled externally
-        if settings.enableslowgo then
-            local foundfile = false
-            local fn, err = io.open(settings.enableslowgo, 'r')
-            if fn ~= nil then
-                foundfile = true
-                fn:close()
-            end
-
-            if foundfile then
-                -- force enable slow go badge effect
-                plugin.set_badge(0xf7, true)
-            else
-                -- force disable slow go badge effect
-                plugin.set_badge(0xf7, false)
+        -- check if a badge should be enabled
+        -- lifetime of these files should be controlled externally
+        function enable_badge(setting, badge_id)
+            if setting then
+                local foundfile = false
+                local fn, err = io.open(setting, 'r')
+                if fn ~= nil then
+                    foundfile = true
+                    fn:close()
+                end
+    
+                if foundfile then
+                    -- force enable slow go badge effect
+                    plugin.set_badge(badge_id, true)
+                else
+                    -- force disable slow go badge effect
+                    plugin.set_badge(badge_id, false)
+                end
             end
         end
+
+        enable_badge(settings.enableberserker, 0x101)
+        enable_badge(settings.enableslowgo, 0xf7)
 
         -- check if Random Pitch should be enabled
         -- lifetime of this file should be controlled externally
