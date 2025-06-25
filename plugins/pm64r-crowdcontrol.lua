@@ -34,8 +34,12 @@ playerDataCoinOffset    = 0xC
 playerDataSPOffset      = 0x10
 playerDataParnerOffset  = 0x12
 
+gameStatusAddr          = 0x80074024
+gameStatusAreaIdOffset  = 0x86 -- u16
+gameStatusMapIdOffset   = 0x8C -- u16
+gameStatusEntryIdOffset = 0x8E -- u16
+
 equippedBadgesTableAddr = 0x8010F498
-currentMapAddr          = 0x800D9050 -- JP address (0x800d9210) - 0x1c0, need to double check this
 homewardShroomAddr      = 0x80450953
 cutsceneValueAddr       = 0x8010EFCA
 
@@ -106,6 +110,121 @@ function plugin.set_badge(badge_id, enabled)
             end
         end
     end
+end
+
+function plugin.convert_to_valid_entrance(areaId, mapId, entranceId)
+    -- if areaId is Toad Town
+    if areaId == 1 then
+        if mapId == 6 and entranceId == 2 then
+            entranceId = 0 -- overwrite whale spout entrance
+        end
+    -- if areaId is Star Haven
+    elseif areaId == 5 then
+        if mapId == 4 then
+            entranceId = 0 -- outside sanctuary, only use main entrance
+        elseif mapId == 5 then
+            entranceId = 0 -- inside sanctuary, only use door
+        elseif mapId == 7 or mapId == 8 then
+            areaId = -1 -- ignore space and flying maps
+        elseif mapId == 0 and entranceId == 3 then
+            entranceId = 0 -- ignore cutscene entrance
+        end
+    -- if areaId is KBF
+    elseif areaId == 7 then
+        if mapId == 0 and entranceId == 5 then
+            entranceId = 0 -- overwrite Eldstar cutscene entrance
+        end
+    -- if areaId is Dry Dry Desert
+    elseif areaId == 10 then
+        if mapId == 2 then
+            if entranceId == 2 or entranceId == 5 or entranceId == 6 or entranceId == 7 then
+                entranceId = 0 -- overwrite a bunch of weird entrances outside ruins
+            end
+        end
+    -- if areaId is Boo's Mansion
+    elseif areaId == 13 then
+        if mapId == 8 and entranceId == 2 then
+            entranceId = 0 -- overwrite epilogue Bow's room cutscene
+        end
+    -- if areaId is Gusty Gulch
+    elseif areaId == 14 then
+        if mapId == 4 and entranceId == 3 then
+            entranceId = 0 -- overwrite suspected Skolar cutscene
+        end
+    -- if areaId is Jade Jungle
+    elseif areaId == 17 then
+        -- check for if mapId + entranceId is a water entrance
+        if mapId == 8 and entranceId == 1 then
+            entranceId = 0 -- red yoshi room overwrite water entrance
+        elseif mapId == 5 and entranceId == 1 then
+            entranceId = 0 -- power quake room overwrite water entrance
+        elseif mapId == 10 then
+            areaId = -1 -- blue yoshi room is invalid
+        elseif mapId == 9 and entranceId == 2 then
+            entranceId = 0 -- water entrance in room with pipe
+        end
+    -- if areaId is volcano
+    elseif areaId == 18
+        if mapId == 13 then
+            if entranceId == 2 or entranceId == 3 then
+                entranceId = 0 -- overwrite bad entrances in LP room
+            end
+        elseif mapId >= 14 and mapId <= 16 then
+            areaId = -1 -- ignore volcano escape sequence rooms
+        end
+    -- if areaId is Flower Fields
+    elseif areaId == 19
+        if mapId == 0 then
+            entranceId = 0 -- hub room has a lot of bad entrances
+        elseif mapId == 1 and entranceId == 2 then
+            entranceId = 0 -- petunia room ignore machine cutscene entrance
+        elseif mapId == 2 and entranceId = 1 then
+            entranceId = 0 -- posie room ignore machine cutscene entrance
+        elseif mapId == 5 and entranceId > 0 then
+            entranceId = 0 -- ignore all of lily's cutscenes
+        elseif mapId == 7 then
+            entranceId = 0 -- ignore rosie machine cutscene entrance
+        elseif mapId == 10 then
+            entranceId = 0 -- ignore sun machine cutscene
+        elseif mapId == 13 then
+            entranceId = 0 -- ignore post machine conversation
+        elseif mapId == 14 then
+            entranceId = 0 -- ignore weird entrances in cloudy climb
+        elseif mapId == 18 and entranceId = 2 then
+            entranceId = 0 -- ignore bubble berry tree room filling with water
+        end
+    -- if areaId is Shiver Region
+    elseif areaId == 20 then
+        if mapId == 9 and entranceId == 2 then
+            entranceId = 0 -- ignore star stone cave
+        elseif mapId == 11 then
+            areaId = -1 -- ignore star stone cave
+        elseif mapId == 10 and entranceId == 2 then
+            areaId = -1 -- ignore epilogue shiver city cutscene
+        elseif mapId == 0 and entranceId == 1 then
+            entranceId = 0 -- weird entrance in mayor's house
+        end
+    -- if areaId is Crystal Palace
+    elseif areaId == 21 then
+        if mapId == 0 and entranceId == 4 then
+            entranceId = 0 -- Kalmar cutscene
+        end
+    -- if areaId is Bowser's Castle
+    elseif areaId == 22 then
+        -- check if mapId + entranceId is a water or lava entrance
+        if mapId >= 6 and mapId <= 11 then
+            areaId = -1 -- ignore lava rooms
+        elseif mapId == 23 and entranceId == 2 then
+            entranceId = 0 -- outside castle lava entrance
+        elseif (mapId == 48 or mapId == 49) and entranceId == 2 then
+            entranceId = 0 -- remove flood room water entrances
+        end 
+    -- if areaId is the Game Over screen
+    elseif areaId == 26 then
+        areaId = -1
+    end
+
+    return areaId, mapId, entranceId
 end
 
 function plugin.setup_addresses()
@@ -237,8 +356,16 @@ function plugin.on_frame(data, settings)
             local fn, err = io.open(settings.sethomewardshroom, 'r')
             if fn ~= nil then
                 fn:close()
-                os.remove(settings.sethomewardshroom)
-                memory.write_u32_be(startingMapAddr, memory.read_u32_be(currentMapAddr))
+                local currentArea = memory.read_u16_be(gameStatusAddr + gameStatusAreaIdOffset)
+                local currentMap = memory.read_u16_be(gameStatusAddr + gameStatusMapIdOffset)
+                local currentEntrance = memory.read_u16_be(gameStatusAddr + gameStatusEntryIdOffset)
+                -- ignore water, lava and cutscene entrances. Try to pick another entrance in the same room that is always reachable
+                currentArea, currentMap, currentEntrance = plugin.convert_to_valid_entrance(currentArea, currentMap, currentEntrance)
+                if currentArea ~= -1 then
+                    local currentRoom = currentArea << 16 | currentMap << 8 | currentEntrance
+                    os.remove(settings.sethomewardshroom)
+                    memory.write_u32_be(startingMapAddr, currentRoom)
+                end
             end
         end
 
