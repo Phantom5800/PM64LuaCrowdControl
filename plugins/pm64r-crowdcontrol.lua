@@ -14,7 +14,7 @@ plugin.settings =
     { name='homewardshroom',        type='file', label='Homeward Shroom' },
     { name='ohkomode',              type='file', label='OHKO Mode' },
     { name='randompitch',           type='file', label='Random Pitch' },
-    { name='sethomewardshroom',     type='file', label='Set Homeward Shroom Location' }
+    { name='sethomewardshroom',     type='file', label='Set Homeward Shroom Location' },
     { name='sethp',                 type='file', label='Set HP Value' },
     { name='setfp',                 type='file', label='Set FP Value' },
     { name='togglemirrormode',      type='file', label='Toggle Mirror Mode' }
@@ -164,7 +164,7 @@ function plugin.convert_to_valid_entrance(areaId, mapId, entranceId)
             entranceId = 0 -- water entrance in room with pipe
         end
     -- if areaId is volcano
-    elseif areaId == 18
+    elseif areaId == 18 then
         if mapId == 13 then
             if entranceId == 2 or entranceId == 3 then
                 entranceId = 0 -- overwrite bad entrances in LP room
@@ -173,12 +173,12 @@ function plugin.convert_to_valid_entrance(areaId, mapId, entranceId)
             areaId = -1 -- ignore volcano escape sequence rooms
         end
     -- if areaId is Flower Fields
-    elseif areaId == 19
+    elseif areaId == 19 then
         if mapId == 0 then
             entranceId = 0 -- hub room has a lot of bad entrances
         elseif mapId == 1 and entranceId == 2 then
             entranceId = 0 -- petunia room ignore machine cutscene entrance
-        elseif mapId == 2 and entranceId = 1 then
+        elseif mapId == 2 and entranceId == 1 then
             entranceId = 0 -- posie room ignore machine cutscene entrance
         elseif mapId == 5 and entranceId > 0 then
             entranceId = 0 -- ignore all of lily's cutscenes
@@ -190,7 +190,7 @@ function plugin.convert_to_valid_entrance(areaId, mapId, entranceId)
             entranceId = 0 -- ignore post machine conversation
         elseif mapId == 14 then
             entranceId = 0 -- ignore weird entrances in cloudy climb
-        elseif mapId == 18 and entranceId = 2 then
+        elseif mapId == 18 and entranceId == 2 then
             entranceId = 0 -- ignore bubble berry tree room filling with water
         end
     -- if areaId is Shiver Region
@@ -370,7 +370,7 @@ function plugin.on_frame(data, settings)
         end
 
         -- force use homeward shroom
-        if settings.homewardshroom and gamemode = GAMESTATE_WORLD then
+        if settings.homewardshroom and gamemode == GAMESTATE_WORLD then
             local fn, err = io.open(settings.homewardshroom, 'r')
             if fn ~= nil then
                 fn:close()
