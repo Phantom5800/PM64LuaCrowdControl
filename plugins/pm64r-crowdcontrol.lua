@@ -35,6 +35,8 @@ playerDataSPOffset      = 0x10
 playerDataParnerOffset  = 0x12
 
 gameStatusAddr          = 0x80074024
+gameStatusStickXOffset  = 0x40 -- s8
+gameStatusStickYOffset  = 0x44 -- s8
 gameStatusAreaIdOffset  = 0x86 -- u16
 gameStatusMapIdOffset   = 0x8C -- u16
 gameStatusEntryIdOffset = 0x8E -- u16
@@ -117,6 +119,14 @@ function plugin.convert_to_valid_entrance(areaId, mapId, entranceId)
     if areaId == 1 then
         if mapId == 6 and entranceId == 2 then
             entranceId = 0 -- overwrite whale spout entrance
+        elseif mapId == 5 then
+            if entranceId == 5 then
+                entranceId = 1 -- overwrite Muskular cutscene
+            elseif entranceId == 3 then
+                entranceId = 2 -- overwrite post-train throw with exiting toybox
+            elseif entranceId == 4 then
+                entranceId = 0 -- overwrite ch8 entrance cutscene in toad town
+            end
         end
     -- if areaId is Star Haven
     elseif areaId == 5 then
@@ -133,6 +143,8 @@ function plugin.convert_to_valid_entrance(areaId, mapId, entranceId)
     elseif areaId == 7 then
         if mapId == 0 and entranceId == 5 then
             entranceId = 0 -- overwrite Eldstar cutscene entrance
+        elseif mapId == 10 then
+            entranceId = 0 -- overwrite Dungeon Shuffle Edlstar cutscene
         end
     -- if areaId is Dry Dry Desert
     elseif areaId == 10 then
@@ -140,6 +152,11 @@ function plugin.convert_to_valid_entrance(areaId, mapId, entranceId)
             if entranceId == 2 or entranceId == 5 or entranceId == 6 or entranceId == 7 then
                 entranceId = 0 -- overwrite a bunch of weird entrances outside ruins
             end
+        end
+    -- if areaId is Dry Dry Ruins
+    elseif areaId == 11 then
+        if mapId == 14 then
+            entranceId = 0 -- overwrite Dungeon Shuffle Mamar cutscene
         end
     -- if areaId is Boo's Mansion
     elseif areaId == 13 then
@@ -150,6 +167,11 @@ function plugin.convert_to_valid_entrance(areaId, mapId, entranceId)
     elseif areaId == 14 then
         if mapId == 4 and entranceId == 3 then
             entranceId = 0 -- overwrite suspected Skolar cutscene
+        end
+    -- if areaId is Shy Guy's Toybox
+    elseif areaId == 16 then
+        if mapId == 14 then
+            entranceId = 0 -- overwrite Dungeon Shuffle Muskular cutscene
         end
     -- if areaId is Jade Jungle
     elseif areaId == 17 then
@@ -192,6 +214,8 @@ function plugin.convert_to_valid_entrance(areaId, mapId, entranceId)
             entranceId = 0 -- ignore weird entrances in cloudy climb
         elseif mapId == 18 and entranceId == 2 then
             entranceId = 0 -- ignore bubble berry tree room filling with water
+        elseif mapId == 15 then
+            entranceId = 0 -- overwrite Dungeon Shuffle Klevar cutscene
         end
     -- if areaId is Shiver Region
     elseif areaId == 20 then
@@ -208,6 +232,8 @@ function plugin.convert_to_valid_entrance(areaId, mapId, entranceId)
     elseif areaId == 21 then
         if mapId == 0 and entranceId == 4 then
             entranceId = 0 -- Kalmar cutscene
+        elseif mapId == 23 then
+            entranceId = 0 -- Dungeon Shuffle Kalmar cutscene
         end
     -- if areaId is Bowser's Castle
     elseif areaId == 22 then
