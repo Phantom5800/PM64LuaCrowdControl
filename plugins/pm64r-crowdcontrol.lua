@@ -378,7 +378,7 @@ function plugin.on_frame(data, settings)
         end
 
         -- change homeward shroom's "home" location to the current room
-        if settings.sethomewardshroom and gamemode == GAMESTATE_WORLD then
+        if settings.sethomewardshroom then
             local fn, err = io.open(settings.sethomewardshroom, 'r')
             if fn ~= nil then
                 fn:close()
