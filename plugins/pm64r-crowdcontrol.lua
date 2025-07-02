@@ -372,8 +372,7 @@ function plugin.on_frame(data, settings)
                 os.remove(settings.togglemirrormode)
 
                 local mirrorState = memory.read_u32_be(mirrorModeAddr)
-                -- toggle flag, ensure it's not set to random every load
-                memory.write_u32_be(mirrorModeAddr, (mirrorState ^ 1) & 0x00000001) 
+                memory.write_u32_be(mirrorModeAddr, ~mirrorState & 1) 
             end
         end
 
