@@ -4,20 +4,21 @@ plugin.name = "PM64R Crowd Control"
 plugin.author = "Phantom5800"
 plugin.settings = 
 {
-    { name='addcoins',              type='file', label='Add Coins' },
-    { name='disableallbadges',      type='file', label='Disable All Badges' },
-    { name='disableheartblocks',    type='file', label='Disable Heart Blocks' },
-    { name='disablesaveblocks',     type='file', label='Disable Save Blocks' },
-    { name='disablespeedyspin',     type='file', label='Disable Speedy Spin' },
-    { name='enableberserker',       type='file', label='Berserker Enabled' },
-    { name='enableslowgo',          type='file', label='Slow Go Enabled' },
-    { name='homewardshroom',        type='file', label='Homeward Shroom' },
-    { name='ohkomode',              type='file', label='OHKO Mode' },
-    { name='randompitch',           type='file', label='Random Pitch' },
-    { name='sethomewardshroom',     type='file', label='Set Homeward Shroom Location' },
-    { name='sethp',                 type='file', label='Set HP Value' },
-    { name='setfp',                 type='file', label='Set FP Value' },
-    { name='togglemirrormode',      type='file', label='Toggle Mirror Mode' }
+    { name='addcoins',                  type='file', label='Add Coins' },
+    { name='disableallbadges',          type='file', label='Disable All Badges' },
+    { name='disableheartblocks',        type='file', label='Disable Heart Blocks' },
+    { name='disablesaveblocks',         type='file', label='Disable Save Blocks' },
+    { name='disablespeedyspin',         type='file', label='Disable Speedy Spin' },
+    { name='disablephysicsglitches',    type='file', label='Disable Physics Glitches' }
+    { name='enableberserker',           type='file', label='Berserker Enabled' },
+    { name='enableslowgo',              type='file', label='Slow Go Enabled' },
+    { name='homewardshroom',            type='file', label='Homeward Shroom' },
+    { name='ohkomode',                  type='file', label='OHKO Mode' },
+    { name='randompitch',               type='file', label='Random Pitch' },
+    { name='sethomewardshroom',         type='file', label='Set Homeward Shroom Location' },
+    { name='sethp',                     type='file', label='Set HP Value' },
+    { name='setfp',                     type='file', label='Set FP Value' },
+    { name='togglemirrormode',          type='file', label='Toggle Mirror Mode' }
 }
 
 plugin.description =
@@ -53,6 +54,7 @@ ohkoModeKey     = 0xAF020004
 noSaveBlockKey  = 0xAF020005
 noHeartBlockKey = 0xAF020006
 speedyKey       = 0xAF040004
+physicsKey      = 0xAF020008
 ispyKey         = 0xAF040005
 peekabooKey     = 0xAF040006
 mirrorModeKey   = 0xAF02000D
@@ -63,6 +65,7 @@ ohkomodeAddr        = nil
 noSaveBlockAddr     = nil
 noHeartBlockAddr    = nil
 speedyAddr          = nil
+physicsGlitchesAddr = nil
 mirrorModeAddr      = nil
 randomPitchAddr     = nil
 
@@ -270,6 +273,8 @@ function plugin.setup_addresses()
                 mirrorModeAddr = currentAddress + 4
             elseif key == speedyKey then
                 speedyAddr = currentAddress + 4
+            elseif key == physicsKey then
+                physicsGlitchesAddr = currentAddress + 4
             elseif key == noSaveBlockKey then
                 noSaveBlockAddr = currentAddress + 4
             elseif key == noHeartBlockKey then
@@ -377,6 +382,7 @@ function plugin.on_frame(data, settings)
         end
 
         -- change homeward shroom's "home" location to the current room
+        -- TODO: don't allow this to trigger at all without boots, it's too dangerous
         if settings.sethomewardshroom then
             local fn, err = io.open(settings.sethomewardshroom, 'r')
             if fn ~= nil then
@@ -522,6 +528,21 @@ function plugin.on_frame(data, settings)
                 memory.write_u32_be(speedyAddr, 0)
             else
                 memory.write_u32_be(speedyAddr, 1)
+            end
+        end
+
+        if settings.disablephysicsglitches and physicsGlitchesAddr then
+            local foundfile = false
+            local fn, err = io.open(settings.disablephysicsglitches, 'r')
+            if fn ~= nil then
+                foundfile = true
+                fn:close()
+            end
+
+            if foundfile then
+                memory.write_u32_be(physicsGlitchesAddr, 0) -- Allow = off
+            else
+                memory.write_u32_be(physicsGlitchesAddr, 1) -- Allow = on
             end
         end
     end
